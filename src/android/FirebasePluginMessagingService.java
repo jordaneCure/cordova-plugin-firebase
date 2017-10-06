@@ -22,6 +22,8 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "FirebasePlugin";
 
+    public static boolean DISABLE_RECEIVER = false;
+
     /**
      * Called when message is received.
      *
@@ -39,6 +41,10 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
         // messages. For more see: https://firebase.google.com/docs/cloud-messaging/concept-options
         // [END_EXCLUDE]
 
+        if (DISABLE_RECEIVER) {
+            return;
+        }
+
         // TODO(developer): Handle FCM messages here.
         // Not getting messages here? See why this may be: https://goo.gl/39bRNJ
         String title;
@@ -54,9 +60,9 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
             id = remoteMessage.getData().get("id");
         }
 
-        if(TextUtils.isEmpty(id)){
+        if (TextUtils.isEmpty(id)) {
             Random rand = new Random();
-            int  n = rand.nextInt(50) + 1;
+            int n = rand.nextInt(50) + 1;
             id = Integer.toString(n);
         }
 
@@ -67,12 +73,14 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
 
         // TODO: Add option to developer to configure if show notification when app on foreground
         if (!TextUtils.isEmpty(text) || !TextUtils.isEmpty(title) || (!remoteMessage.getData().isEmpty())) {
-            boolean showNotification = (FirebasePlugin.inBackground() || !FirebasePlugin.hasNotificationsCallback()) && (!TextUtils.isEmpty(text) || !TextUtils.isEmpty(title));
+            boolean showNotification = (FirebasePlugin.inBackground() || !FirebasePlugin.hasNotificationsCallback())
+                    && (!TextUtils.isEmpty(text) || !TextUtils.isEmpty(title));
             sendNotification(id, title, text, remoteMessage.getData(), showNotification);
         }
     }
 
-    private void sendNotification(String id, String title, String messageBody, Map<String, String> data, boolean showNotification) {
+    private void sendNotification(String id, String title, String messageBody, Map<String, String> data,
+            boolean showNotification) {
         Bundle bundle = new Bundle();
         for (String key : data.keySet()) {
             bundle.putString(key, data.get(key));
@@ -84,14 +92,10 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                     PendingIntent.FLAG_UPDATE_CURRENT);
 
             Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
-                    .setContentTitle(title)
-                    .setContentText(messageBody)
-		    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(messageBody))
-                    .setAutoCancel(true)
-                    .setSound(defaultSoundUri)
-                    .setContentIntent(pendingIntent);
+            NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this).setContentTitle(title)
+                    .setContentText(messageBody).setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(messageBody)).setAutoCancel(true)
+                    .setSound(defaultSoundUri).setContentIntent(pendingIntent);
 
             int resID = getResources().getIdentifier("notification_icon", "drawable", getPackageName());
             if (resID != 0) {
@@ -100,21 +104,21 @@ public class FirebasePluginMessagingService extends FirebaseMessagingService {
                 notificationBuilder.setSmallIcon(getApplicationInfo().icon);
             }
 
-            if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
-            {
-				int accentID = getResources().getIdentifier("accent", "color", getPackageName());
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                int accentID = getResources().getIdentifier("accent", "color", getPackageName());
                 notificationBuilder.setColor(getResources().getColor(accentID, null));
             }
 
             Notification notification = notificationBuilder.build();
-            if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP){
-				int iconID = android.R.id.icon;
-				int notiID = getResources().getIdentifier("notification_big", "drawable", getPackageName());
-		if (notification.contentView != null) {
-	                notification.contentView.setImageViewResource(iconID, notiID);
-		}
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                int iconID = android.R.id.icon;
+                int notiID = getResources().getIdentifier("notification_big", "drawable", getPackageName());
+                if (notification.contentView != null) {
+                    notification.contentView.setImageViewResource(iconID, notiID);
+                }
             }
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            NotificationManager notificationManager = (NotificationManager) getSystemService(
+                    Context.NOTIFICATION_SERVICE);
 
             notificationManager.notify(id.hashCode(), notification);
         } else {

@@ -3,6 +3,14 @@ exports.getVerificationID = function(number, success, error) {
     exec(success, error, "FirebasePlugin", "getVerificationID", [number]);
 };
 
+exports.disableReceiver = function(success, error) {
+    exec(success, error, "FirebasePlugin", "disableReceiver", []);
+};
+
+exports.enableReceiver = function(success, error) {
+    exec(success, error, "FirebasePlugin", "enableReceiver", []);
+};
+
 exports.getInstanceId = function(success, error) {
     exec(success, error, "FirebasePlugin", "getInstanceId", []);
 };
